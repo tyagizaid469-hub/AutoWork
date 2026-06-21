@@ -99,5 +99,10 @@ class BackgroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "gemini_auto_channel"
         private const val NOTIFICATION_ID = 1001
+        
+        fun onPromptDone() {
+            // Called when a prompt is successfully executed
+            // Can be used for logging or further processing
+        }
     }
 }

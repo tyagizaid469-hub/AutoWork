@@ -46,7 +46,7 @@ while [ -h "$PRG" ] ; do
     PRG=`readlink "$PRG"`
 done
 SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/" >/dev/null
+cd "`dirname "$PRG"`/" >/dev/null
 APP_HOME="`pwd -P`"
 cd "$SAVED" >/dev/null
 

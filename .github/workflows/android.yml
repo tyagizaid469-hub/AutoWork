@@ -2,27 +2,60 @@ name: Android Build
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
 
-      - run: chmod +x gradlew
+    - name: Setup Gradle Build Tool
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.2
 
-      - run: ./gradlew assembleDebug
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: APK
-          path: app/build/outputs/apk/debug/*.apk
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Build Release APK (Optional)
+      run: ./gradlew assembleRelease --stacktrace
+      continue-on-error: true
+
+    - name: Upload APK Artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: apk-builds
+        path: |
+          app/build/outputs/apk/debug/*.apk
+          app/build/outputs/apk/release/*.apk
+        retention-days: 30
+
+    - name: Check Build Status
+      run: |
+        if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
+          echo "✅ Debug APK built successfully!"
+          ls -lh app/build/outputs/apk/debug/*.apk
+        else
+          echo "❌ Debug APK build failed!"
+          exit 1
+        fi
